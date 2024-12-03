@@ -17,18 +17,32 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+def generate_invite_code():
+    """Генерирует случайный 6-значный буквенно-цифровой код."""
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+
+
 class PhoneNumberAuthView(APIView):
     def post(self, request, *args, **kwargs):
         phone_number = request.data.get("phone_number")
         if not phone_number:
             return JsonResponse({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Генерация 4-значного кода авторизации
         auth_code = random.randint(1000, 9999)
-        time.sleep(1)  # Задержка для имитации обработки
 
+        # Поиск или создание пользователя
         user, created = User.objects.get_or_create(phone_number=phone_number)
         user.auth_code = auth_code
+
+        # Присвоение инвайт-кода при первой авторизации
+        if created:
+            user.invite_code = generate_invite_code()
+
         user.save()
+
+        # Симуляция задержки для отправки кода
+        time.sleep(2)
 
         return JsonResponse({"message": "Code sent successfully"}, status=status.HTTP_200_OK)
 
@@ -57,16 +71,13 @@ class CodeAuthView(APIView):
 
 
 class UserProfileView(APIView):
-    def get(self, request, *args, **kwargs):
-        phone_number = request.GET.get("phone_number")
-        if not phone_number:
-            return JsonResponse({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
-
+    def get(self, request, phone_number, *args, **kwargs):
         try:
             user = User.objects.get(phone_number=phone_number)
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Создаем профиль пользователя
         user_profile = {
             "phone_number": user.phone_number,
             "invite_code": user.invite_code,
@@ -78,13 +89,10 @@ class UserProfileView(APIView):
 
 
 class EnterInviteCodeView(APIView):
-    def post(self, request, *args, **kwargs):
-        phone_number = request.data.get("phone_number")
+    def post(self, request, phone_number, *args, **kwargs):
         invite_code = request.data.get("invite_code")
-
-        if not phone_number or not invite_code:
-            return JsonResponse({"error": "Phone number and invite code are required"},
-                                status=status.HTTP_400_BAD_REQUEST)
+        if not invite_code:
+            return JsonResponse({"error": "Invite code is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(phone_number=phone_number)
@@ -96,11 +104,11 @@ class EnterInviteCodeView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "Invalid invite code"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Привязываем инвайт-код
         user.referred_by = referred_user
         user.save()
 
         return JsonResponse({"message": "Invite code accepted"}, status=status.HTTP_200_OK)
-
 
 class GenerateInviteCodeView(APIView):
     def post(self, request, *args, **kwargs):
@@ -142,5 +150,6 @@ class ActivateInviteCodeView(APIView):
         user.save()
 
         return JsonResponse({"message": "Invite code activated successfully"}, status=status.HTTP_200_OK)
+
 
 
