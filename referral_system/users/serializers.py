@@ -1,10 +1,16 @@
 from rest_framework import serializers
 from .models import User
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['phone_number', 'invite_code', 'activated_invite_code', 'referred_by']
+class PhoneNumberSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=15)
+
+class AuthCodeSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=15)
+    auth_code = serializers.CharField(max_length=4)
+
+class LoginSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=15)
+    password = serializers.CharField(write_only=True)
 
     def validate_phone_number(self, value):
         # Проверка, что номер телефона не существует в базе данных
