@@ -13,7 +13,6 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate_phone_number(self, value):
-        # Проверка, что номер телефона не существует в базе данных
         if User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("Пользователь с таким номером уже существует.")
         return value
@@ -24,7 +23,6 @@ class InviteCodeSerializer(serializers.ModelSerializer):
         fields = ['invite_code']
 
     def validate_invite_code(self, value):
-        # Проверка, что инвайт-код существует и не был уже использован
         if not User.objects.filter(invite_code=value).exists():
             raise serializers.ValidationError("Этот инвайт-код не существует.")
         return value

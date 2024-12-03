@@ -18,7 +18,6 @@ class LoginView(APIView):
 
 
 def generate_invite_code():
-    """Генерирует случайный 6-значный буквенно-цифровой код."""
     return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
 
@@ -28,20 +27,16 @@ class PhoneNumberAuthView(APIView):
         if not phone_number:
             return JsonResponse({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Генерация 4-значного кода авторизации
         auth_code = random.randint(1000, 9999)
 
-        # Поиск или создание пользователя
         user, created = User.objects.get_or_create(phone_number=phone_number)
         user.auth_code = auth_code
 
-        # Присвоение инвайт-кода при первой авторизации
         if created:
             user.invite_code = generate_invite_code()
 
         user.save()
 
-        # Симуляция задержки для отправки кода
         time.sleep(2)
 
         return JsonResponse({"message": "Code sent successfully"}, status=status.HTTP_200_OK)
@@ -77,7 +72,6 @@ class UserProfileView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Создаем профиль пользователя
         user_profile = {
             "phone_number": user.phone_number,
             "invite_code": user.invite_code,
@@ -104,7 +98,6 @@ class EnterInviteCodeView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "Invalid invite code"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Привязываем инвайт-код
         user.referred_by = referred_user
         user.save()
 
@@ -121,7 +114,6 @@ class GenerateInviteCodeView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Генерация уникального кода
         invite_code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         user.invite_code = invite_code
         user.save()

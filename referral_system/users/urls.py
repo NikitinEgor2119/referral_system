@@ -2,7 +2,7 @@ from django.urls import path
 from .views import LoginView, GenerateInviteCodeView, ActivateInviteCodeView, UserProfileView, PhoneNumberAuthView, CodeAuthView, EnterInviteCodeView
 
 urlpatterns = [
-    path('login/', LoginView.as_view(), name='login'),  # Пример маршрута для LoginView
+    path('login/', LoginView.as_view(), name='login'),
     path('generate_invite_code/', GenerateInviteCodeView.as_view(), name='generate_invite_code'),
     path('activate_invite_code/', ActivateInviteCodeView.as_view(), name='activate_invite_code'),
     path('profile/', UserProfileView.as_view(), name='user_profile'),
